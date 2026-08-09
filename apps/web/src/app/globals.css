@@ -1,0 +1,2 @@
+@tailwind base;@tailwind components;@tailwind utilities;
+:root{--ink:#17221c;--paper:#f6f5ef;--moss:#274b3c;--gold:#d7a74a}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,sans-serif}.display{font-family:Georgia,serif;letter-spacing:-.045em}.eyebrow{letter-spacing:.16em;text-transform:uppercase;font-size:.7rem;font-weight:700}.shell{max-width:1280px;margin:auto;padding-left:1.5rem;padding-right:1.5rem}@media(min-width:768px){.shell{padding-left:3rem;padding-right:3rem}}

@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url = env("DATABASE_URL")
+}
+
+model School {
+  id            String         @id @default(cuid())
+  name          String
+  establishedYear Int?
+  email         String?
+  phone         String?
+  address       String?
+  users         User[]
+  students      Student[]
+  classes       Class[]
+  academicYears AcademicYear[]
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  isActive     Boolean        @default(true)
+  schoolId     String?
+  school       School?        @relation(fields: [schoolId], references: [id])
+  roles        UserRole[]
+  sessions     RefreshToken[]
+  teacher      Teacher?
+  parent       Parent?
+  auditLogs    AuditLog[]
+}
+
+model Role {
+  id    String   @id @default(cuid())
+  name  String @unique
+  users UserRole[]
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  @@id([userId, roleId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+}
+
+model AcademicYear {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  startsOn    DateTime
+  endsOn      DateTime
+  isCurrent   Boolean      @default(false)
+  schoolId    String
+  school      School       @relation(fields: [schoolId], references: [id])
+  enrollments Enrollment[]
+}
+
+model Class {
+  id       String    @id @default(cuid())
+  name     String
+  schoolId String
+  school   School    @relation(fields: [schoolId], references: [id])
+  sections Section[]
+  @@unique([schoolId, name])
+}
+
+model Section {
+  id          String       @id @default(cuid())
+  name        String
+  classId     String
+  class       Class        @relation(fields: [classId], references: [id])
+  enrollments Enrollment[]
+  attendance  Attendance[]
+  @@unique([classId, name])
+}
+
+model Teacher {
+  id         String @id @default(cuid())
+  employeeNo String @unique
+  userId     String @unique
+  user       User   @relation(fields: [userId], references: [id])
+}
+
+model Parent {
+  id       String          @id @default(cuid())
+  userId   String          @unique
+  user     User            @relation(fields: [userId], references: [id])
+  children StudentParent[]
+}
+
+model Student {
+  id          String          @id @default(cuid())
+  admissionNo String          @unique
+  firstName   String
+  lastName    String
+  dateOfBirth DateTime?
+  gender      String?
+  email       String?
+  schoolId    String
+  school      School          @relation(fields: [schoolId], references: [id])
+  enrollments Enrollment[]
+  parents     StudentParent[]
+  attendance  Attendance[]
+  invoices    Invoice[]
+  isArchived  Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+}
+
+model StudentParent {
+  studentId    String
+  parentId     String
+  relationship String
+  student      Student @relation(fields: [studentId], references: [id])
+  parent       Parent  @relation(fields: [parentId], references: [id])
+  @@id([studentId, parentId])
+}
+
+model Enrollment {
+  id             String       @id @default(cuid())
+  studentId      String
+  academicYearId String
+  sectionId      String
+  student        Student      @relation(fields: [studentId], references: [id])
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  section        Section      @relation(fields: [sectionId], references: [id])
+  @@unique([studentId, academicYearId])
+}
+
+model Attendance {
+  id        String           @id @default(cuid())
+  studentId String
+  sectionId String
+  date      DateTime
+  status    String
+  student   Student          @relation(fields: [studentId], references: [id])
+  section   Section          @relation(fields: [sectionId], references: [id])
+  @@unique([studentId, date])
+}
+
+model AdmissionEnquiry {
+  id              String          @id @default(cuid())
+  applicantName   String
+  email           String?
+  phone           String?
+  status          String @default("NEW")
+  interestedClass String?
+  notes           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model FeeCategory {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  invoices Invoice[]
+}
+
+model Invoice {
+  id         String        @id @default(cuid())
+  invoiceNo  String        @unique
+  studentId  String
+  categoryId String?
+  amount     Float
+  dueDate    DateTime
+  status     String        @default("ISSUED")
+  createdAt  DateTime      @default(now())
+  student    Student       @relation(fields: [studentId], references: [id])
+  category   FeeCategory?  @relation(fields: [categoryId], references: [id])
+  payments   Payment[]
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  invoiceId String
+  amount    Float
+  method    String
+  reference String?
+  paidAt    DateTime @default(now())
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+}
+
+model WebsiteContent {
+  id          String        @id @default("homepage")
+  key         String        @unique
+  title       String
+  body        Json
+  status      String        @default("DRAFT")
+  updatedAt   DateTime      @updatedAt
+  publishedAt DateTime?
+}
+
+model Announcement {
+  id        String        @id @default(cuid())
+  title     String
+  body      String
+  status    String        @default("DRAFT")
+  createdAt DateTime      @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  module    String
+  entity    String?
+  metadata  String?
+  ip        String?
+  createdAt DateTime @default(now())
+}

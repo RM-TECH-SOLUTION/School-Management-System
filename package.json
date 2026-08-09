@@ -1,0 +1,16 @@
+{
+  "name": "school-platform",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "npm@10.8.2",
+  "workspaces": ["apps/*"],
+  "scripts": {
+    "dev": "concurrently -n web,api -c cyan,magenta \"npm run dev -w @school/web\" \"npm run start:dev -w @school/api\"",
+    "build": "npm run build -w @school/web && npm run build -w @school/api",
+    "lint": "npm run lint -w @school/web && npm run lint -w @school/api",
+    "db:generate": "npm run prisma:generate -w @school/api",
+    "db:migrate": "npm run prisma:migrate -w @school/api",
+    "db:seed": "npm run prisma:seed -w @school/api"
+  },
+  "devDependencies": { "concurrently": "^9.1.0" }
+}
